@@ -139,6 +139,15 @@ def main():
     # port bound quickly, then run the bot in the main thread.
     threading.Thread(target=run_web_server, daemon=True).start()
 
+    # Newer Python versions (3.12+, and especially 3.14) removed the old
+    # behavior where asyncio.get_event_loop() would silently create a loop
+    # if none existed yet. python-telegram-bot's run_polling() relies on
+    # that loop existing, so we create and register one explicitly here to
+    # stay compatible regardless of which Python version the host uses.
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("status", status))
